@@ -20,25 +20,15 @@ export default function WearablePage() {
     // Check if user is already connected on page load
     useEffect(() => {
         const checkUserConnection = async () => {
-            if (!email) return;
-            
             try {
                 const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.log('User not connected:', errorData);
-                    return;
-                }
-                
                 const data = await response.json();
-                if (data.success && data.hasData) {
-                    console.log('Found existing data:', data);
+                if (data.success && data.data) {
                     setTerraUser({
                         reference_id: email,
                         provider: 'GARMIN'
                     });
                     setHealthData(data.data);
-                    setConnectionStatus('Connected');
                 }
             } catch (error) {
                 console.error('Error checking user connection:', error);
@@ -49,25 +39,20 @@ export default function WearablePage() {
     }, [email]);
 
     // Polling function to check data status
-    const pollForData = async (referenceId) => {
+    const pollForData = async (userId) => {
         try {
-            const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(referenceId)}`);
+            const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(userId)}`);
             if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error polling data:', errorData);
-                throw new Error(errorData.error || 'Failed to fetch data');
+                throw new Error('Failed to fetch data');
             }
             
             const data = await response.json();
-            console.log('Polling response for', referenceId, ':', data);
+            console.log('Polling response:', data);
             
             if (data.success) {
-                if (data.hasData) {
-                    console.log('Setting health data for', referenceId, ':', data.data);
-                    setHealthData(prevData => ({
-                        ...prevData,
-                        ...data.data
-                    }));
+                if (data.data && Object.keys(data.data).length > 0) {
+                    console.log('Setting health data:', data.data);
+                    setHealthData(data.data);
                     return true;
                 }
                 // If we have a successful response but no data yet, keep polling
@@ -120,80 +105,55 @@ export default function WearablePage() {
     };
 
     const fetchHistoricalData = async () => {
-        if (!email) {
-            alert('Please enter an email address');
-            return;
-        }
-
         setIsFetching(true);
-        setConnectionStatus(`Requesting historical data for ${email}...`);
-
+        setConnectionStatus('Requesting historical data...');
         try {
-            // First try to get existing data
-            const existingDataResponse = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
-            const existingData = await existingDataResponse.json();
-
-            if (existingData.success && existingData.hasData) {
-                console.log('Found existing data:', existingData);
-                setHealthData(existingData.data);
-                setConnectionStatus('Found existing data');
-                setIsFetching(false);
-                return;
-            }
-
-            // If no existing data, request new data
+            // First, request the historical data
             const requestResponse = await fetch('/api/wearable/historical-data', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    referenceId: email
+                    userId: email,
+                    days: parseInt(days)
                 })
             });
-
+            
             if (!requestResponse.ok) {
-                const errorData = await requestResponse.json();
-                console.error('Error requesting data:', errorData);
-                setConnectionStatus(`Error: ${errorData.error || 'Failed to request data'}`);
-                setIsFetching(false);
-                return;
+                throw new Error('Failed to request historical data');
             }
 
             const data = await requestResponse.json();
-            if (!data.success) {
-                setConnectionStatus('Failed to initiate data request');
+            console.log('Historical data request response:', data);
+            if (data.success) {
+                setConnectionStatus('Data request initiated, waiting for data...');
+                
+                // Start polling for data
+                let attempts = 0;
+                const maxAttempts = 30; // 30 attempts (90 seconds)
+                console.log('Starting polling for data...');
+                const pollInterval = setInterval(async () => {
+                    attempts++;
+                    const hasData = await pollForData(email);
+                    
+                    if (hasData || attempts >= maxAttempts) {
+                        clearInterval(pollInterval);
+                        setIsFetching(false);
+                        if (!hasData) {
+                            setConnectionStatus('Data fetch timeout. Please try again.');
+                        } else if (hasData) {
+                            setConnectionStatus('Data retrieved successfully!');
+                        }
+                    }
+                }, 3000);
+            } else {
                 setIsFetching(false);
-                return;
+                setConnectionStatus('Failed to request historical data');
             }
-
-            setConnectionStatus('Data request initiated. Waiting for data...');
-
-            // Poll for data
-            let attempts = 0;
-            const maxAttempts = 30; // 1 minute with 2-second intervals
-
-            while (attempts < maxAttempts) {
-                const pollResponse = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
-                const pollData = await pollResponse.json();
-
-                if (pollData.success && pollData.hasData) {
-                    setHealthData(pollData.data);
-                    setConnectionStatus('Data retrieved successfully');
-                    setIsFetching(false);
-                    return;
-                }
-
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                attempts++;
-            }
-
-            setConnectionStatus('Timed out waiting for data');
         } catch (error) {
             console.error('Error fetching historical data:', error);
-            setConnectionStatus(`Error: ${error.message || 'Failed to fetch data'}`);
-        } finally {
-            setIsFetching(false);
+            alert('Error fetching historical data. Please try again.');
         }
     };
 
@@ -203,73 +163,82 @@ export default function WearablePage() {
             
             {/* Device Connection Section */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4">Device Connection</h2>
+                {connectionStatus && (
+                    <div className={`mb-4 p-3 rounded ${connectionStatus.includes('Failed') ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {connectionStatus}
+                    </div>
+                )}
+                {terraUser && (
+                    <div className="mb-4 p-3 rounded bg-green-100 text-green-700">
+                        Connected to {terraUser.provider} as {terraUser.reference_id}
+                    </div>
+                )}
+                <h2 className="text-xl font-semibold mb-4">Connect Your Device</h2>
                 <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-900 mb-2">
                         Email Address
                     </label>
                     <input
                         type="email"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Enter your email"
                     />
                 </div>
-                <div className="flex items-center space-x-4">
-                    <button
-                        onClick={connectDevice}
-                        disabled={isConnecting || !email}
-                        className={`px-4 py-2 rounded-md text-white ${
-                            isConnecting || !email
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-indigo-600 hover:bg-indigo-700'
-                        }`}
-                    >
-                        {isConnecting ? 'Connecting...' : 'Connect Device'}
-                    </button>
-                    <button
-                        onClick={fetchHistoricalData}
-                        disabled={isFetching || !email}
-                        className={`px-4 py-2 rounded-md text-white ${
-                            isFetching || !email
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-green-600 hover:bg-green-700'
-                        }`}
-                    >
-                        {isFetching ? 'Fetching...' : 'Fetch Historical Data'}
-                    </button>
-                </div>
-                {connectionStatus && (
-                    <p className="mt-4 text-sm text-gray-600">{connectionStatus}</p>
-                )}
+                <button
+                    className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={connectDevice}
+                    disabled={isConnecting}
+                >
+                    {isConnecting ? 'Connecting...' : 'Connect Garmin Device'}
+                </button>
             </div>
 
-            {/* Data Display Section */}
+            {/* Historical Data Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-4">Health Data</h2>
-                
-                {/* Tabs */}
+                <h2 className="text-xl font-semibold mb-4">Historical Data</h2>
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Days of History
+                    </label>
+                    <input
+                        type="number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                        value={days}
+                        onChange={(e) => setDays(e.target.value)}
+                        min="1"
+                        max="180"
+                    />
+                </div>
+                <button
+                    className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 font-medium shadow-sm mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={fetchHistoricalData}
+                    disabled={isFetching || !terraUser}
+                >
+                    {isFetching ? 'Fetching Data...' : 'Fetch Historical Data'}
+                </button>
+
+                {/* Data Display Tabs */}
                 <div className="mt-6">
                     <div className="border-b border-gray-200">
                         <nav className="-mb-px flex space-x-8">
                             {['activity', 'daily', 'sleep', 'body'].map((tab) => (
                                 <button
                                     key={tab}
+                                    className={`
+                                        py-2 px-1 border-b-2 font-medium text-sm
+                                        ${activeTab === tab
+                                            ? 'border-blue-500 text-blue-600'
+                                            : 'border-transparent text-gray-900 hover:text-gray-700 hover:border-gray-300'
+                                        }
+                                    `}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`${
-                                        activeTab === tab
-                                            ? 'border-indigo-500 text-indigo-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    } whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm capitalize`}
                                 >
-                                    {tab}
+                                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
                                 </button>
                             ))}
                         </nav>
                     </div>
-
-                    {/* Data Display */}
                     <div className="mt-4">
                         <div className="bg-gray-50 p-4 rounded-md overflow-auto max-h-96 text-gray-900">
                             {healthData[activeTab]?.length > 0 ? (
@@ -281,30 +250,31 @@ export default function WearablePage() {
                                                     <h3 className="font-medium mb-2">Activity on {new Date(item.metadata?.start_time).toLocaleDateString()}</h3>
                                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                                         <div>
-                                                            <p><span className="font-medium">Distance:</span> {item.distance_meters} meters</p>
-                                                            <p><span className="font-medium">Duration:</span> {item.duration_seconds} seconds</p>
-                                                            <p><span className="font-medium">Steps:</span> {item.steps}</p>
+                                                            <p><span className="font-medium">Duration:</span> {Math.round(item.duration_s / 60)} minutes</p>
+                                                            <p><span className="font-medium">Distance:</span> {(item.distance_meters / 1000).toFixed(2)} km</p>
+                                                            <p><span className="font-medium">Calories:</span> {item.calories} kcal</p>
                                                         </div>
                                                         <div>
-                                                            <p><span className="font-medium">Calories:</span> {item.calories}</p>
-                                                            <p><span className="font-medium">Heart Rate:</span> {item.avg_heart_rate_bpm} bpm</p>
+                                                            <p><span className="font-medium">Steps:</span> {item.steps}</p>
+                                                            <p><span className="font-medium">Avg HR:</span> {item.avg_heart_rate_bpm} bpm</p>
+                                                            <p><span className="font-medium">Activity Type:</span> {item.activity_type}</p>
                                                         </div>
                                                     </div>
                                                 </div>
                                             )}
                                             {activeTab === 'daily' && (
                                                 <div>
-                                                    <h3 className="font-medium mb-2">Daily Summary for {new Date(item.metadata?.start_time).toLocaleDateString()}</h3>
+                                                    <h3 className="font-medium mb-2">Summary for {new Date(item.date).toLocaleDateString()}</h3>
                                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                                         <div>
                                                             <p><span className="font-medium">Steps:</span> {item.steps}</p>
-                                                            <p><span className="font-medium">Distance:</span> {item.distance_meters} meters</p>
-                                                            <p><span className="font-medium">Calories:</span> {item.calories}</p>
+                                                            <p><span className="font-medium">Distance:</span> {(item.distance_meters / 1000).toFixed(2)} km</p>
+                                                            <p><span className="font-medium">Calories:</span> {item.calories} kcal</p>
                                                         </div>
                                                         <div>
-                                                            <p><span className="font-medium">Active Seconds:</span> {item.active_seconds}</p>
-                                                            <p><span className="font-medium">Low Activity Seconds:</span> {item.low_activity_seconds}</p>
-                                                            <p><span className="font-medium">Rest Seconds:</span> {item.rest_seconds}</p>
+                                                            <p><span className="font-medium">Active Seconds:</span> {Math.round(item.active_seconds / 60)} minutes</p>
+                                                            <p><span className="font-medium">Resting HR:</span> {item.resting_heartrate} bpm</p>
+                                                            <p><span className="font-medium">Floors Climbed:</span> {item.floors_climbed || 0}</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -314,28 +284,31 @@ export default function WearablePage() {
                                                     <h3 className="font-medium mb-2">Sleep on {new Date(item.metadata?.start_time).toLocaleDateString()}</h3>
                                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                                         <div>
-                                                            <p><span className="font-medium">Duration:</span> {item.duration_seconds} seconds</p>
-                                                            <p><span className="font-medium">Light Sleep:</span> {item.light_sleep_seconds} seconds</p>
-                                                            <p><span className="font-medium">Deep Sleep:</span> {item.deep_sleep_seconds} seconds</p>
+                                                            <p><span className="font-medium">Duration:</span> {Math.round(item.duration_s / 3600)} hours</p>
+                                                            <p><span className="font-medium">Deep Sleep:</span> {Math.round(item.deep_sleep_s / 60)} minutes</p>
+                                                            <p><span className="font-medium">Light Sleep:</span> {Math.round(item.light_sleep_s / 60)} minutes</p>
                                                         </div>
                                                         <div>
-                                                            <p><span className="font-medium">REM Sleep:</span> {item.rem_sleep_seconds} seconds</p>
-                                                            <p><span className="font-medium">Awake:</span> {item.awake_seconds} seconds</p>
+                                                            <p><span className="font-medium">REM Sleep:</span> {Math.round(item.rem_sleep_s / 60)} minutes</p>
+                                                            <p><span className="font-medium">Sleep Score:</span> {item.sleep_score || 'N/A'}</p>
+                                                            <p><span className="font-medium">Times Awake:</span> {item.times_woken || 0}</p>
                                                         </div>
                                                     </div>
                                                 </div>
                                             )}
                                             {activeTab === 'body' && (
                                                 <div>
-                                                    <h3 className="font-medium mb-2">Body Metrics on {new Date(item.metadata?.start_time).toLocaleDateString()}</h3>
+                                                    <h3 className="font-medium mb-2">Body Metrics on {new Date(item.timestamp).toLocaleDateString()}</h3>
                                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                                         <div>
-                                                            <p><span className="font-medium">Weight:</span> {item.weight_kg} kg</p>
-                                                            <p><span className="font-medium">BMI:</span> {item.bmi}</p>
+                                                            <p><span className="font-medium">Weight:</span> {item.weight_kg?.toFixed(1)} kg</p>
+                                                            <p><span className="font-medium">BMI:</span> {item.bmi?.toFixed(1) || 'N/A'}</p>
+                                                            <p><span className="font-medium">Body Fat:</span> {item.body_fat_pct?.toFixed(1)}%</p>
                                                         </div>
                                                         <div>
-                                                            <p><span className="font-medium">Body Fat:</span> {item.body_fat_percentage}%</p>
-                                                            <p><span className="font-medium">Lean Mass:</span> {item.lean_mass_kg} kg</p>
+                                                            <p><span className="font-medium">Muscle Mass:</span> {item.muscle_mass_kg?.toFixed(1)} kg</p>
+                                                            <p><span className="font-medium">Bone Mass:</span> {item.bone_mass_kg?.toFixed(1)} kg</p>
+                                                            <p><span className="font-medium">Water %:</span> {item.water_pct?.toFixed(1)}%</p>
                                                         </div>
                                                     </div>
                                                 </div>
