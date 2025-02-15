@@ -3,10 +3,13 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import "../app/globals.css";
+import Image from 'next/image';
+import Link from 'next/link';
+import OpenAI from "openai";
 
 const LoadingScreen = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="flex items-center gap-2">
         {[...Array(3)].map((_, i) => (
           <motion.div
@@ -67,7 +70,7 @@ export default function Result() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 pt-32">
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

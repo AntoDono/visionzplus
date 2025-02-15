@@ -5,19 +5,8 @@ import { motion } from 'framer-motion';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-32">
       <div className="container mx-auto px-4 py-16">
-        {/* Navigation */}
-        <nav className="flex justify-between items-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-2xl font-bold text-white"
-          >
-            VisionZ<span className="text-purple-400">+</span>
-          </motion.div>
-        </nav>
 
         {/* Hero Section */}
         <main className="flex flex-col items-center justify-center text-center">
@@ -37,7 +26,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl"
+            className="text-xl md:text-2xl text-gray-300 max-w-2xl p-10"
           >
             Visualize, Create, and Predict Any Data with AI-Powered Insights
           </motion.p>
