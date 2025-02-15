@@ -110,7 +110,7 @@ router.get('/callback', async (req, res) => {
     if (user_id) {
       // Store or update user wearable data
       await UserWearable.findOneAndUpdate(
-        { userId: reference_id },
+        { referenceId: reference_id },
         {
           terraUserId: user_id,
           provider: resource,
@@ -119,14 +119,6 @@ router.get('/callback', async (req, res) => {
         { upsert: true }
       );
 
-      // Redirect to success page or show success message
-      // res.json({
-      //   success: true,
-      //   message: 'Authentication successful',
-      //   user_id,
-      //   reference_id,
-      //   provider: resource
-      // });
       // Redirect back to frontend
       res.redirect(frontendUrl);
     } else {
@@ -145,23 +137,55 @@ router.get('/callback', async (req, res) => {
   }
 });
 
+// Helper function to process health data
+const processHealthData = async (user, event, terraReference) => {
+  const dataArray = Array.isArray(event.data) ? event.data : [event.data];
+  const updates = new Map();
+
+  for (const item of dataArray) {
+    const key = event.type === 'activity' || event.type === 'sleep'
+      ? item.metadata?.summary_id
+      : item.metadata?.start_time;
+
+    if (key) {
+      updates.set(key, item);
+    }
+  }
+
+  // Get current data map
+  const currentData = user.healthData[event.type] || new Map();
+  
+  // Merge new data
+  for (const [key, value] of updates) {
+    currentData.set(key, value);
+  }
+
+  return currentData;
+};
+
 // Webhook endpoint for Terra events
 router.post('/webhook', async (req, res) => {
   try {
     const event = req.body;
     const terraReference = req.headers['terra-reference'];
+    const terraSignature = req.headers['terra-signature'];
     console.log('Received Terra webhook event:', event);
     console.log('Terra reference:', terraReference);
 
     if (event.type === 'auth' && event.status === 'success') {
       // Handle authentication success
       await UserWearable.findOneAndUpdate(
-        { userId: event.reference_id },
+        { referenceId: event.reference_id },
         {
           terraUserId: event.user.user_id,
           provider: event.user.provider,
           lastSync: new Date(),
-          scopes: event.user.scopes
+          scopes: event.user.scopes,
+          referenceId: event.reference_id,
+          'healthData.activity': new Map(),
+          'healthData.daily': new Map(),
+          'healthData.sleep': new Map(),
+          'healthData.body': new Map()
         },
         { upsert: true }
       );
@@ -187,20 +211,68 @@ router.post('/webhook', async (req, res) => {
       }
     } else if (event.type === 'large_request_processing') {
       console.log('Large request processing:', event);
+      // Update user record to indicate processing has started
+      await UserWearable.findOneAndUpdate(
+        { terraUserId: event.user.user_id },
+        { 
+          $set: { 
+            'pendingRequests.status': 'processing'
+          }
+        }
+      );
+      console.log('Updated processing status for user:', event.user.user_id);
     } else if (event.type === 'large_request_sending') {
       console.log('Large request sending, expecting chunks:', event.number_of_payloads);
+      // Update user record with total expected chunks
+      await UserWearable.findOneAndUpdate(
+        { terraUserId: event.user.user_id },
+        { 
+          $set: { 
+            'pendingRequests.totalChunks': event.number_of_payloads,
+            'pendingRequests.status': 'receiving'
+          }
+        }
+      );
+      console.log('Updated chunks info for user:', event.user.user_id);
     } else if (event.type === 'activity' || event.type === 'daily' || event.type === 'sleep' || event.type === 'body') {
-      // Store the data chunk
+      console.log(`Received ${event.type} data for user:`, event.user.user_id);
+      console.log('Reference ID:', event.reference_id);
+      
       const user = await UserWearable.findOne({ terraUserId: event.user.user_id });
       if (user) {
-        // Add the data to the appropriate array in healthData
-        await UserWearable.findOneAndUpdate(
-          { terraUserId: event.user.user_id },
-          { 
-            $push: { [`healthData.${event.type}`]: event.data },
+        // Process and deduplicate the new data
+        const updatedData = await processHealthData(user, event, terraReference);
+        
+        // Update the user record with the processed data
+        const update = {
+          $set: {
+            [`healthData.${event.type}`]: updatedData,
             lastSync: new Date()
-          }
+          },
+          $inc: { 'pendingRequests.chunksReceived': 1 }
+        };
+
+        console.log(`Updating ${event.type} data for user:`, update);
+        
+        const updatedUser = await UserWearable.findOneAndUpdate(
+          { terraUserId: event.user.user_id },
+          update,
+          { new: true }
         );
+
+        // Check if all chunks have been received
+        if (updatedUser.pendingRequests?.chunksReceived === updatedUser.pendingRequests?.totalChunks) {
+          console.log('All chunks received, clearing pending requests');
+          await UserWearable.findOneAndUpdate(
+            { terraUserId: event.user.user_id },
+            { 
+              $set: { 
+                'pendingRequests.status': 'completed',
+                lastSync: new Date()
+              }
+            }
+          );
+        }
       }
     }
 
@@ -218,37 +290,20 @@ router.post('/webhook', async (req, res) => {
 router.post('/historical-data', async (req, res) => {
   console.log('Received historical data request:', req.body);
   try {
-    const { userId, days = 28 } = req.body;
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
+    const { referenceId } = req.body;
+    if (!referenceId) {
+      return res.status(400).json({ error: 'referenceId (email) is required' });
     }
 
-    // Find or create the user's Terra record
-    let userWearable = await UserWearable.findOne({ userId });
-    
-    // If user doesn't exist, try to get their data from Terra
-    if (!userWearable) {
-      try {
-        // Get user data from Terra
-        const userResponse = await callTerraAPI('/userinfo', 'GET', null, {
-          user_id: userId
-        });
-
-        if (userResponse && userResponse.user) {
-          userWearable = await UserWearable.create({
-            userId,
-            terraUserId: userResponse.user.user_id,
-            provider: userResponse.user.provider,
-            scopes: userResponse.user.scopes
-          });
-        } else {
-          return res.status(404).json({ error: 'User not found in Terra' });
-        }
-      } catch (error) {
-        console.error('Error getting user info from Terra:', error);
-        return res.status(500).json({ error: 'Failed to get user info from Terra' });
-      }
+    const user = await UserWearable.findOne({ referenceId });
+    if (!user || !user.terraUserId) {
+      return res.status(404).json({ error: 'User not found or not connected to Terra' });
     }
+
+    console.log('Found user:', user);
+
+    // Use fixed 28 days for historical data
+    const days = 28;
 
     // Calculate date range
     const startDate = new Date();
@@ -260,42 +315,63 @@ router.post('/historical-data', async (req, res) => {
     const start = startDate.toISOString().split('T')[0];
     const end = endDate.toISOString().split('T')[0];
 
-    // Endpoints to fetch data from
-    const endpoints = ['activity', 'daily', 'sleep', 'body'];
-    const requests = endpoints.map(endpoint => 
-      callTerraAPI(`/${endpoint}`, 'GET', null, {
-        user_id: userWearable.terraUserId,
-        start_date: start,
-        end_date: end,
-        to_webhook: true
-      })
-    );
-
-    // Generate a unique reference for this request
-    const terraReference = `hist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await UserWearable.findOneAndUpdate(
-        { userId },
-        { 
-          $push: { 
-            pendingDataRequests: {
-              reference: terraReference,
-              requestedAt: new Date(),
-              endpoints
-            }
+    // Generate a unique reference for this batch of requests
+    const batchReference = `hist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Store the request details in the user record
+    await UserWearable.findOneAndUpdate(
+      { referenceId },
+      { 
+        $set: { 
+          pendingRequests: {
+            reference: batchReference,
+            endpoints: ['activity', 'daily', 'sleep', 'body'],
+            startDate: start,
+            endDate: end,
+            requestedAt: new Date(),
+            status: 'initiated',
+            chunksReceived: 0,
+            totalChunks: null
           }
         }
-      );
-    }
+      }
+    );
+
+    // Make requests to Terra API for each data type
+    console.log('Making Terra API requests for user:', user.terraUserId);
+    const requestPromises = ['activity', 'daily', 'sleep', 'body'].map(async (dataType) => {
+      try {
+        console.log('Making Terra API request with terraUserId:', user.terraUserId);
+        const response = await callTerraAPI(`/${dataType}`, 'GET', null, {
+          user_id: user.terraUserId,
+          start_date: start,
+          end_date: end,
+          to_webhook: true
+        });
+        console.log(`Requested ${dataType} data from Terra:`, response);
+        return { dataType, success: true };
+      } catch (error) {
+        console.error(`Error requesting ${dataType} data:`, error);
+        return { dataType, success: false, error: error.message };
+      }
+    });
 
     // Wait for all requests to be initiated
-    await Promise.all(requests);
+    const results = await Promise.all(requestPromises);
+    const failedRequests = results.filter(r => !r.success);
 
+    if (failedRequests.length > 0) {
+      console.warn('Some data type requests failed:', failedRequests);
+    }
+
+    // Return success response with the reference
     res.json({
       success: true,
       message: 'Historical data request initiated',
-      terraReference,
-      endpoints
+      reference: batchReference,
+      failedDataTypes: failedRequests.map(r => r.dataType)
     });
+
   } catch (error) {
     console.error('Historical data request error:', error);
     res.status(500).json({
@@ -306,50 +382,53 @@ router.post('/historical-data', async (req, res) => {
 });
 
 // Get user's stored historical data
-router.get('/historical-data/:userId', async (req, res) => {
-  console.log('Fetching historical data for user:', req.params.userId);
+router.get('/historical-data/:referenceId', async (req, res) => {
+  const { referenceId } = req.params;
+  console.log('Fetching stored historical data for:', referenceId);
+
   try {
-    const { userId } = req.params;
-    
-    const userWearable = await UserWearable.findOne({ userId });
-    if (!userWearable) {
+    const user = await UserWearable.findOne({ referenceId });
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check if we have any health data
-    const hasHealthData = userWearable.healthData && (
-      userWearable.healthData.activity?.length > 0 ||
-      userWearable.healthData.daily?.length > 0 ||
-      userWearable.healthData.sleep?.length > 0 ||
-      userWearable.healthData.body?.length > 0
-    );
+    // Convert Maps to arrays for response
+    const healthData = {
+      activity: Array.from(user.healthData?.activity?.values() || []),
+      daily: Array.from(user.healthData?.daily?.values() || []),
+      sleep: Array.from(user.healthData?.sleep?.values() || []),
+      body: Array.from(user.healthData?.body?.values() || [])
+    };
 
-    console.log('User health data:', userWearable.healthData);
-    console.log('Has health data:', hasHealthData);
+    const hasData = Object.values(healthData).some(arr => arr.length > 0);
+    console.log('Found health data:', {
+      activityCount: healthData.activity.length,
+      dailyCount: healthData.daily.length,
+      sleepCount: healthData.sleep.length,
+      bodyCount: healthData.body.length,
+      hasData
+    });
 
-    res.json({
+    return res.json({
       success: true,
-      data: userWearable.healthData || {
-        activity: [],
-        daily: [],
-        sleep: [],
-        body: []
-      },
-      hasData: hasHealthData
+      data: healthData,
+      hasData,
+      user: {
+        terraUserId: user.terraUserId,
+        provider: user.provider,
+        lastSync: user.lastSync
+      }
     });
   } catch (error) {
     console.error('Error fetching historical data:', error);
-    res.status(500).json({
-      error: 'Failed to fetch historical data',
-      details: error.message
-    });
+    return res.status(500).json({ error: error.message });
   }
 });
 
 // Get user's wearable data
-router.get('/data/:userId', async (req, res) => {
+router.get('/data/:referenceId', async (req, res) => {
   try {
-    const userWearable = await UserWearable.findOne({ userId: req.params.userId });
+    const userWearable = await UserWearable.findOne({ referenceId: req.params.referenceId });
     if (!userWearable) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -375,68 +454,20 @@ router.get('/test/connection', async (req, res) => {
   try {
     console.log('Testing Terra API connection...');
     console.log('Environment check:', {
-      TERRA_API_URL,
-      'TERRA_DEV_ID exists': !!TERRA_DEV_ID,
-      'TERRA_API_KEY exists': !!TERRA_API_KEY
+      TERRA_API_KEY: TERRA_API_KEY ? 'Present' : 'Missing',
+      TERRA_DEV_ID: TERRA_DEV_ID ? 'Present' : 'Missing'
     });
-    
-    // Test Terra API connection by generating a widget session
-    const widgetSession = await callTerraAPI('/auth/generateWidgetSession', 'POST', {
-      providers: "GARMIN",
-      language: "en",
-      reference_id: "alexandre.venet@hotmail.com",
-      auth_success_redirect_url: `http://localhost:${process.env.PORT || 5001}/api/wearable/callback`,
-      auth_failure_redirect_url: `http://localhost:${process.env.PORT || 5001}/api/wearable/callback/error`
-    });
-    
-    // Test session
-    if (!req.session.visits) {
-      req.session.visits = 0;
-    }
-    req.session.visits++;
 
-    console.log('Test connection successful');
+    const response = await callTerraAPI('/subscriptions', 'GET');
     res.json({
       success: true,
-      terra_connection: 'OK',
-      widget_session: widgetSession,
-      session_working: true,
-      session_visits: req.session.visits
+      message: 'Successfully connected to Terra API',
+      data: response
     });
   } catch (error) {
-    console.error('Test connection error:', error);
+    console.error('Terra connection test failed:', error);
     res.status(500).json({
-      error: 'Connection test failed',
-      details: error.message,
-      terra_dev_id_exists: !!TERRA_DEV_ID,
-      terra_api_key_exists: !!TERRA_API_KEY
-    });
-  }
-});
-
-// Test route for Garmin auth URL generation
-router.get('/test/auth-url', async (req, res) => {
-  try {
-    const testUserId = 'test-user-123';
-    
-    // Generate authentication URL using Terra API
-    const response = await callTerraAPI('/auth/generateWidgetSession', 'POST', {
-      reference_id: testUserId,
-      providers: ["GARMIN"],
-      language: "en",
-      auth_success_redirect_url: `${req.protocol}://${req.get('host')}/api/wearable/callback`,
-      auth_failure_redirect_url: `${req.protocol}://${req.get('host')}/api/wearable/callback/error`
-    });
-    
-    res.json({
-      success: true,
-      widget_url: response.url,
-      test_user_id: testUserId
-    });
-  } catch (error) {
-    console.error('Auth URL generation error:', error);
-    res.status(500).json({
-      error: 'Failed to generate auth URL',
+      error: 'Failed to connect to Terra API',
       details: error.message
     });
   }

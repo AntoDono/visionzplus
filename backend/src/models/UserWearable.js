@@ -1,14 +1,16 @@
 import mongoose from 'mongoose';
 
 const userWearableSchema = new mongoose.Schema({
-  userId: {
+  referenceId: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    description: 'User email used as reference ID for Terra'
   },
   terraUserId: {
     type: String,
-    required: true
+    required: true,
+    description: 'Terra-specific user ID'
   },
   provider: {
     type: String,
@@ -23,28 +25,48 @@ const userWearableSchema = new mongoose.Schema({
     default: Date.now
   },
   healthData: {
-    activity: [{
-      type: mongoose.Schema.Types.Mixed
-    }],
-    daily: [{
-      type: mongoose.Schema.Types.Mixed
-    }],
-    sleep: [{
-      type: mongoose.Schema.Types.Mixed
-    }],
-    body: [{
-      type: mongoose.Schema.Types.Mixed
-    }]
-  },
-  pendingDataRequests: [{
-    reference: String,
-    requestedAt: Date,
-    endpoints: [String],
-    completed: {
-      type: Boolean,
-      default: false
+    activity: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: new Map(),
+      description: 'Map of summary_id to activity data'
+    },
+    daily: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: new Map(),
+      description: 'Map of start_time to daily data'
+    },
+    sleep: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: new Map(),
+      description: 'Map of summary_id to sleep data'
+    },
+    body: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: new Map(),
+      description: 'Map of start_time to body data'
     }
-  }]
+  },
+  pendingRequests: {
+    reference: String,
+    endpoints: [String],
+    startDate: String,
+    endDate: String,
+    requestedAt: Date,
+    status: {
+      type: String,
+      enum: ['initiated', 'processing', 'receiving', 'completed', 'error'],
+      default: 'initiated'
+    },
+    chunksReceived: {
+      type: Number,
+      default: 0
+    },
+    totalChunks: Number
+  }
 }, {
   timestamps: true
 });
