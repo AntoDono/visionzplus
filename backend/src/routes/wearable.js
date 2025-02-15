@@ -273,19 +273,18 @@ router.post('/historical-data', async (req, res) => {
 
     // Generate a unique reference for this request
     const terraReference = `hist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await UserWearable.findOneAndUpdate(
-        { userId },
-        { 
-          $push: { 
-            pendingDataRequests: {
-              reference: terraReference,
-              requestedAt: new Date(),
-              endpoints
-            }
+    await UserWearable.findOneAndUpdate(
+      { userId },
+      { 
+        $push: { 
+          pendingDataRequests: {
+            reference: terraReference,
+            requestedAt: new Date(),
+            endpoints
           }
         }
-      );
-    }
+      }
+    );
 
     // Wait for all requests to be initiated
     await Promise.all(requests);
@@ -389,19 +388,13 @@ router.get('/test/connection', async (req, res) => {
       auth_failure_redirect_url: `http://localhost:${process.env.PORT || 5001}/api/wearable/callback/error`
     });
     
-    // Test session
-    if (!req.session.visits) {
-      req.session.visits = 0;
-    }
-    req.session.visits++;
+    // No longer using session for this test endpoint
 
     console.log('Test connection successful');
     res.json({
       success: true,
       terra_connection: 'OK',
-      widget_session: widgetSession,
-      session_working: true,
-      session_visits: req.session.visits
+      widget_session: widgetSession
     });
   } catch (error) {
     console.error('Test connection error:', error);
