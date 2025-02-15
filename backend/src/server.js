@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import aiRoutes from './routes/ai.js';
 
 dotenv.config();
 
@@ -29,6 +30,9 @@ const connectDB = async () => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
+
+// AI Routes
+app.use('/api/ai', aiRoutes);
 
 // Start server
 connectDB().then(() => {
