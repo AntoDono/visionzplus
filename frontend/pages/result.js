@@ -6,12 +6,6 @@ import "../app/globals.css";
 import Image from 'next/image';
 import Link from 'next/link';
 import OpenAI from "openai";
-import { config } from '../utils/config';
-
-const openai = new OpenAI({
-  apiKey: config.openaiApiKey,
-  dangerouslyAllowBrowser: true // Only if you need to use OpenAI in the browser
-});
 
 const LoadingScreen = () => {
   return (
