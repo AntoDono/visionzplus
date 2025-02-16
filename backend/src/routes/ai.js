@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const router = express.Router();
+const MODEL = "o3-mini"
 
 // Validate OpenAI API key
 if (!process.env.OPENAI_API_KEY) {
@@ -28,7 +29,7 @@ router.post('/generate', async (req, res) => {
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "o3-mini",
+      model: MODEL,
     });
 
     const response = completion.choices[0].message.content;
@@ -37,7 +38,7 @@ router.post('/generate', async (req, res) => {
     const interaction = new AIInteraction({
       prompt,
       response,
-      model: "o3-mini",
+      model: MODEL,
       timestamp: new Date()
     });
 
@@ -96,7 +97,7 @@ router.post('/chat', async (req, res) => {
 
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-4o-mini",
+      model: MODEL,
     });
 
     const response = completion.choices[0].message.content;

@@ -107,7 +107,6 @@ export default function Result() {
          - Suggest the most effective types of visualizations for this data
          - Explain why each visualization type would be valuable
          - Consider multiple aspects of the data that could be visualized
-         - At least 5 charts.
 
       3. Technical Considerations:
          - Note any data transformations needed
@@ -181,7 +180,7 @@ export default function Result() {
          - Handle errors gracefully
 
       3. Technical Requirements:
-         - Use D3 and Chart.js (already imported, no need to import)
+         - Use D3 (already imported, no need to import)
          - Implement responsive design
          - Optimize for performance
          - Include error handling
@@ -190,10 +189,11 @@ export default function Result() {
          - Calculate all the measurements (e.g., count, mean, standard deviation)
 
       4. Visual Apperance:
-         - Use white text for everything, and make sure background is transparent
-         - Two graphs/chart per row.
+         - Use white text for labels, and make sure background is transparent.
+         - For box and other charts, be colorful and avoid purple.
          - Center the graphs on the screen
          - Make sure all the legends, text label has plenty of space and padding. Avoid overlaps.
+         - Ensure readability
          - Smooth and ease animation
          - Only allow hover interaction (displays information), disable pan and zoom.
          - Include the measurements
@@ -217,7 +217,7 @@ export default function Result() {
           "5. Error Handling: Add comprehensive error boundaries and user feedback..."
         ],
         "js-code": \`
-          // no need to import D3 or Chart.js, as it is already done automatically.
+          // no need to import D3, as it is already done automatically.
           <script>
           (() => {
             try {
@@ -335,8 +335,10 @@ export default function Result() {
                 transition={{ duration: 0.5 }}
                 className="text-center mb-8"
               >
-                <h1 className="text-4xl font-bold text-white mb-4 pt-32">Analysis Results</h1>
-                <div id="renderCharts"></div>
+                <h1 className="text-4xl font-bold text-white mb-4 pt-32 p-8">Analysis Results</h1>
+                <div id="renderCharts" className="w-full h-full flex flex-col justify-center items-center gap-y-4">
+                  
+                </div>
                 <p className="text-gray-300">
                   {data ? `Analyzing ${data.length} file${data.length !== 1 ? 's' : ''}` : 'No data available'}
                 </p>
@@ -444,7 +446,7 @@ export default function Result() {
                         },
                         body: JSON.stringify({
                           question: userInput,
-                          context: analysisResult
+                          context: `${JSON.stringify(data, null, 2).substring(0, 10000)}\n\n${analysisResult}`
                         }),
                       });
 
