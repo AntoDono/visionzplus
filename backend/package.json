@@ -1,0 +1,23 @@
+{
+  "name": "visionzplus-backend",
+  "version": "1.0.0",
+  "description": "Backend server for VisionZPlus",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.18.2",
+    "express-session": "^1.18.1",
+    "mongoose": "^8.0.0",
+    "openai": "^4.85.1",
+    "terra-api": "^1.4.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
