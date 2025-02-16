@@ -39,6 +39,7 @@ export default function Result() {
   const [chatMessages, setChatMessages] = useState([]);
   const [userInput, setUserInput] = useState('');
   const [isMessageSending, setIsMessageSending] = useState(false);
+  const [requirements, setRequirements] = useState(null);
 
   const requestAIRewrite = async (errorMessage, originalCode) => {
     setIsLoading(true);
@@ -113,28 +114,27 @@ export default function Result() {
          - Identify potential challenges in visualization
          - Suggest performance optimizations
 
+      4. Diversity:
+         - Consider different types of visualizations: parallel plot, pie chart, trendline....
+
       ## Response Format
       Return a JSON object with the following structure:
       {
         "data_analysis": {
-          "structure": "Description of data structure",
-          "patterns": ["List of identified patterns"],
-          "quality_issues": ["List of potential issues"]
+          "structure": "Description of data structure, given the data object, what fields to access in order to get the data.",
         },
         "visualization_recommendations": [
           {
             "type": "Name of visualization",
-            "rationale": "Why this visualization is appropriate",
+            "title": "Title of the Chart",
+            "interpretation": "A sentence of why this graph and what is shown",
             "data_requirements": ["What data transformations are needed"],
-            "expected_insights": ["What insights this could reveal"]
           }
-        ],
-        "technical_notes": {
-          "transformations": ["Required data transformations"],
-          "challenges": ["Potential technical challenges"],
-          "optimizations": ["Recommended optimizations"]
-        }
+        ]
       }
+
+      Specific requirements from the user:
+      ${requirements}
     `;
 
     try {
@@ -192,11 +192,16 @@ export default function Result() {
          - Use white text for labels, and make sure background is transparent.
          - For box and other charts, be colorful and avoid purple.
          - Center the graphs on the screen
+         - Must include legends
          - Make sure all the legends, text label has plenty of space and padding. Avoid overlaps.
          - Ensure readability
          - Smooth and ease animation
          - Only allow hover interaction (displays information), disable pan and zoom.
          - Include the measurements
+         - Include a title for the chart
+         - Include the interpretation for each chart, with a font smaller than the title.
+         - Ensure the graph is 80% of window's width
+         - Parallell coordinates plot must be interactive (hover highlights the line, use bright colors).
 
       ## Response Format
       Return a JSON object with:
@@ -212,9 +217,9 @@ export default function Result() {
         "chain-of-thought": [
           "1. Data Retrieval: First, I'll safely access sessionStorage using try-catch...",
           "2. Validation: I'll verify the data structure matches expected format...",
-          "3. Processing: Transform the data into the format required by the charting library...",
-          "4. Visualization: Implement responsive charts with interaction handlers...",
-          "5. Error Handling: Add comprehensive error boundaries and user feedback..."
+          .
+          .
+          .
         ],
         "js-code": \`
           // no need to import D3, as it is already done automatically.
@@ -256,10 +261,12 @@ export default function Result() {
 
   const generateVisualization = async () => {
     const storedData = sessionStorage.getItem('data');
+    const requirements = sessionStorage.getItem('requirements');
     if (storedData) {
       try {
         const parsedData = JSON.parse(storedData);
         setData(parsedData);
+        setRequirements(requirements);
         console.log('Data from session storage:', parsedData);
 
         const analysis = await analyzeData(parsedData);
