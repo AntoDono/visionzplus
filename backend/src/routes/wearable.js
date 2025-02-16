@@ -1,6 +1,13 @@
 import express from 'express';
 import UserWearable from '../models/UserWearable.js';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -304,38 +311,25 @@ router.post('/historical-data', async (req, res) => {
   }
 });
 
-// Get user's stored historical data
+// Get historical data from MongoDB
 router.get('/historical-data/:userId', async (req, res) => {
-  console.log('Fetching historical data for user:', req.params.userId);
+  console.log('Fetching historical data from MongoDB');
   try {
-    const { userId } = req.params;
-    
-    const userWearable = await UserWearable.findOne({ userId });
-    if (!userWearable) {
-      return res.status(404).json({ error: 'User not found' });
+    // Read the exported data directly from the known path
+    const exportPath = '../../../exports/mongodb_export.json';
+    try {
+      const mongoData = JSON.parse(fs.readFileSync(exportPath, 'utf-8'));
+      res.json({
+        success: true,
+        data: mongoData
+      });
+    } catch (error) {
+      console.error('Error reading MongoDB export:', error);
+      res.status(500).json({
+        error: 'Failed to read MongoDB data',
+        details: error.message
+      });
     }
-
-    // Check if we have any health data
-    const hasHealthData = userWearable.healthData && (
-      userWearable.healthData.activity?.length > 0 ||
-      userWearable.healthData.daily?.length > 0 ||
-      userWearable.healthData.sleep?.length > 0 ||
-      userWearable.healthData.body?.length > 0
-    );
-
-    console.log('User health data:', userWearable.healthData);
-    console.log('Has health data:', hasHealthData);
-
-    res.json({
-      success: true,
-      data: userWearable.healthData || {
-        activity: [],
-        daily: [],
-        sleep: [],
-        body: []
-      },
-      hasData: hasHealthData
-    });
   } catch (error) {
     console.error('Error fetching historical data:', error);
     res.status(500).json({
