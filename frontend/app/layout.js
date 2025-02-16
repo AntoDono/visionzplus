@@ -11,10 +11,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${inter.className} relative min-h-full`}>
+    <html lang="en">
+      <body className={`${inter.className} relative min-h-screen`}>
         <Header />
-        <main>{children}</main>
+        <div className="flex items-center justify-center">
+          <main className="pt-24 w-[85vw]">{children}</main>
+        </div>
         <footer className="absolute bottom-0 w-full py-6 text-center text-sm text-gray-500">
           {new Date().getFullYear()} VisionZ+. All rights reserved.
         </footer>
