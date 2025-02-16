@@ -128,6 +128,26 @@ export default function WearablePage() {
         }
     };
 
+    const downloadHistoricalData = () => {
+        // Create a Blob with the JSON data
+        const jsonString = JSON.stringify(healthData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        
+        // Create a URL for the Blob
+        const url = URL.createObjectURL(blob);
+        
+        // Create a temporary link element and trigger the download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'historical-data.json';
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="container mx-auto px-4 py-8 text-gray-900">
             <h1 className="text-3xl font-bold mb-8 text-gray-900">Wearable Data Dashboard</h1>
@@ -167,8 +187,16 @@ export default function WearablePage() {
 
             {/* Historical Data Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-4">Historical Data</h2>
-
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Historical Data</h2>
+                    <button
+                        onClick={downloadHistoricalData}
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 font-medium shadow-sm"
+                        disabled={!healthData || Object.keys(healthData).every(key => healthData[key].length === 0)}
+                    >
+                        Download Data
+                    </button>
+                </div>
 
                 {/* Data Display Dropdowns */}
                 <div className="mt-6 space-y-4">

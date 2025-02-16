@@ -315,8 +315,8 @@ router.post('/historical-data', async (req, res) => {
 router.get('/historical-data/:userId', async (req, res) => {
   console.log('Fetching historical data from MongoDB');
   try {
-    // Read the exported data directly from the known path
-    const exportPath = '/Users/taoruihuang/Documents/GitHub/visionzplus/exports/mongodb_export.json';
+    // Read the exported data directly from the known path using relative path
+    const exportPath = path.join(__dirname, '../../../exports/mongodb_export.json');
     try {
       const mongoData = JSON.parse(fs.readFileSync(exportPath, 'utf-8'));
       res.json({
