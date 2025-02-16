@@ -9,14 +9,10 @@ First of its kind data visualization and analysis platform powered by our ground
 Stanford TreeHacks 2025.
 
 ### Team:
-
-[Youwei Zhen, Brown University](https://youweizhen.com);
-
-[Taorui Huang, Stanford University](http://linkedin.com/in/taorui-huang/); 
-
-[Nick Adesina, University of California, Berkeley](http://linkedin.com/in/nickadesina); 
-
-[Anni Zimina, Stanford University](https://www.linkedin.com/in/a-zimina/);
+<a href="https://youweizhen.com" target="_blank">Youwei Zhen</a> (Brown University), 
+<a href="http://linkedin.com/in/taorui-huang/" target="_blank">Taorui Huang</a> (Stanford University), 
+<a href="http://linkedin.com/in/nickadesina" target="_blank">Nick Adesina</a> (UC Berkeley), 
+<a href="https://www.linkedin.com/in/a-zimina/" target="_blank">Anni Zimina</a> (Stanford University)
 
 ## Revolutionary Multi-Agent AI Architecture
 
