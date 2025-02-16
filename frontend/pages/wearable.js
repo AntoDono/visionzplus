@@ -131,6 +131,26 @@ export default function WearablePage() {
         }
     };
 
+    const downloadHistoricalData = () => {
+        // Create a Blob with the JSON data
+        const jsonString = JSON.stringify(healthData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        
+        // Create a URL for the Blob
+        const url = URL.createObjectURL(blob);
+        
+        // Create a temporary link element and trigger the download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'historical-data.json';
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <>
             <div className="fixed inset-0 -z-10">
@@ -160,7 +180,6 @@ export default function WearablePage() {
                             <p className="mt-4 text-lg leading-7 text-gray-600">
                                 Connect your device to start tracking your health metrics.
                             </p>
-
                             <div className="mt-8">
                                 <div className="card p-6 bg-white rounded-xl shadow-sm border border-gray-200">
                                     <div className="mb-4">
@@ -220,6 +239,55 @@ export default function WearablePage() {
                             </div>
                         </motion.div>
                     </div>
+                </div>
+            </div>
+
+            {/* Historical Data Section */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Historical Data</h2>
+                    <button
+                        onClick={downloadHistoricalData}
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 font-medium shadow-sm"
+                        disabled={!healthData || Object.keys(healthData).every(key => healthData[key].length === 0)}
+                    >
+                        Download Data
+                    </button>
+                </div>
+
+                {/* Data Display Dropdowns */}
+                <div className="mt-6 space-y-4">
+                    {Object.entries(healthData).map(([collection, documents]) => (
+                        <div key={collection} className="bg-white shadow-sm rounded-lg overflow-hidden">
+                            <button
+                                onClick={() => setActiveTab(activeTab === collection ? null : collection)}
+                                className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 focus:outline-none flex justify-between items-center"
+                            >
+                                <span className="font-medium text-gray-900">{collection} ({documents.length} documents)</span>
+                                <svg
+                                    className={`w-5 h-5 transform transition-transform ${activeTab === collection ? 'rotate-180' : ''}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            {activeTab === collection && (
+                                <div className="p-4 border-t border-gray-200">
+                                    <div className="max-h-96 overflow-auto">
+                                        {documents.map((doc, index) => (
+                                            <div key={index} className="mb-4 p-3 bg-gray-50 rounded">
+                                                <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
+                                                    {JSON.stringify(doc, null, 2)}
+                                                </pre>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </div>
         </>
