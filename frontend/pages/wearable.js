@@ -159,7 +159,7 @@ export default function WearablePage() {
 
     return (
         <div className="container mx-auto px-4 py-8 text-gray-900">
-            <h1 className="text-3xl font-bold mb-8 text-gray-900">Wearable Data Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-8 text-gray-900"></h1>
             
             {/* Device Connection Section */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -186,11 +186,36 @@ export default function WearablePage() {
                     />
                 </div>
                 <button
-                    className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={connectDevice}
                     disabled={isConnecting}
+                    className={`px-8 py-4 bg-purple-400 hover:bg-purple-500 text-white rounded-full text-xl font-semibold transition-all transform hover:scale-105 hover:shadow-lg inline-flex items-center gap-2 ${
+                        isConnecting ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                 >
-                    {isConnecting ? 'Connecting...' : 'Connect Garmin Device'}
+                    {isConnecting ? (
+                        <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            Connecting...
+                        </>
+                    ) : (
+                        <>
+                            Connect Device
+                            <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                ></path>
+                            </svg>
+                        </>
+                    )}
                 </button>
             </div>
 
