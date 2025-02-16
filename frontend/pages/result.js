@@ -42,53 +42,17 @@ export default function Result() {
   const [userInput, setUserInput] = useState('');
   const [isMessageSending, setIsMessageSending] = useState(false);
   const [requirements, setRequirements] = useState(null);
+  const chatContainerRef = useRef(null);
 
-  const requestAIRewrite = async (errorMessage, originalCode) => {
-    setIsLoading(true);
-    const retryPrompt = `
-      The previous visualization code encountered an error:
-      Error: ${errorMessage}
-
-      Original code that failed:
-      ${originalCode}
-
-      Please rewrite the visualization code to fix this error and ensure it works properly.
-      Follow the same output format as before, but focus on addressing the specific error.
-      
-      ## Response Format Rules
-      Return ONLY a JSON object with no additional text. Must start with '{' and end with '}'.
-      {
-        "chain-of-thought": [
-          "Error analysis and fix steps..."
-        ],
-        "js-code": "// Fixed visualization code"
-      }
-    `;
-
-    try {
-      const response = await fetch('http://localhost:5000/api/ai/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: retryPrompt })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      const generated = JSON.parse(result.data.response);
-      console.log('AI Rewrite:', generated);
-      setGeneratedCode(generated["js-code"]);
-    } catch (error) {
-      console.error('Error requesting AI rewrite:', error);
-      alert('Failed to get AI rewrite: ' + error.message);
-    } finally {
-      setIsLoading(false);
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
 
   const analyzeData = async (data) => {
     const analysisPrompt = `
@@ -187,11 +151,13 @@ export default function Result() {
          - Optimize for performance
          - Include error handling
          - Do not include external graphics or import paths
-         - All charts must be rendered in the div with id "renderCharts"
+         - All charts must be rendered and appended in the div with id "renderCharts" directly (1st child).
          - Calculate all the measurements (e.g., count, mean, standard deviation)
+         - For each chart created, console.log a message to indicate success.
+         - We are using D3 v7, so certain functions are not available, such as d3.nest, which is replaced by d3.group
 
       4. Visual Apperance:
-         - Use white text for labels, and make sure background is transparent.
+         - Use black and purple text for labels, and make sure background is transparent.
          - For box and other charts, be colorful and avoid purple.
          - Center the graphs on the screen
          - Must include legends
@@ -375,18 +341,15 @@ export default function Result() {
             document.body.appendChild(script);
           }).catch(error => {
             console.error('Error loading libraries:', error);
-            requestAIRewrite(error.message, scriptContent);
           });
 
           document.body.appendChild(d3Script);
           document.body.appendChild(chartjsScript);
         } catch (scriptError) {
           console.error('Error setting up script:', scriptError);
-          requestAIRewrite(scriptError.message, scriptContent);
         }
       } catch (error) {
         console.error('Error setting up visualization container:', error);
-        requestAIRewrite(error.message, generatedCode);
       }
     }
   }, [generatedCode]);
@@ -455,9 +418,8 @@ export default function Result() {
                 <div className="absolute -left-4 top-8 h-12 w-12">
                   <PulseAnimation delay={0} />
                 </div>
-                <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-                  Analysis
-                  <span className="text-purple-400 pl-3">Results</span>
+                <h1 className="text-4xl font-bold tracking-tight text-gray-900 pt-10 sm:text-5xl">
+                  Analysis <span className="text-purple-400">Results</span>
                 </h1>
 
                 {/* Analysis Results */}
@@ -473,7 +435,7 @@ export default function Result() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 }}
-                      className="card p-6 bg-transparent rounded-xl shadow-sm border border-gray-200"
+                      className="card p-6 bg-white rounded-xl shadow-sm border border-gray-200"
                     >
                       <h3 className="text-xl font-semibold mb-4">Data Structure Analysis</h3>
                       <ReactMarkdown>{analysisResult.data_analysis.structure}</ReactMarkdown>
@@ -486,7 +448,7 @@ export default function Result() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 * (index + 1) }}
-                        className="card p-6 bg-transparent rounded-xl shadow-sm border border-gray-200"
+                        className="card p-6 bg-white rounded-xl shadow-sm border border-gray-200"
                       >
                         <h3 className="text-xl font-semibold mb-4">{rec.title}</h3>
                         <div className="space-y-2">
@@ -514,48 +476,74 @@ export default function Result() {
                     transition={{ delay: 0.3 }}
                     className="mt-8"
                   >
-                    <div className="card p-6 bg-transparent rounded-xl shadow-sm border border-gray-200">
+                    <div className="card p-6 bg-white rounded-xl shadow-sm border border-gray-200">
                       <h2 className="text-xl font-semibold mb-4">Generated Visualization</h2>
-                      <div id="visualization" className="min-h-[400px] bg-gray-50 rounded-lg p-4"></div>
+                      <div id="renderCharts" className="w-full h-full flex flex-col justify-center items-center gap-y-4 p-2"></div>
                     </div>
                   </motion.div>
                 )}
 
                 {/* Chat Interface */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="mt-8"
-                >
+                <div className="fixed bottom-6 right-6 z-50">
                   <button
                     onClick={() => setIsChatOpen(!isChatOpen)}
-                    className="rounded-lg bg-purple-400 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2"
+                    className="w-14 h-14 rounded-full bg-purple-400 text-white hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 shadow-lg flex items-center justify-center"
                   >
-                    {isChatOpen ? 'Close Chat' : 'Ask Questions'}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
+                    </svg>
                   </button>
 
                   {isChatOpen && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mt-4 card p-6 bg-white rounded-xl shadow-sm border border-gray-200"
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                      className="absolute bottom-20 right-0 w-96 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
                     >
-                      <div className="space-y-4">
-                        <div className="h-64 overflow-y-auto space-y-4 mb-4">
+                      <div className="p-4 border-b border-gray-200 bg-purple-50 flex justify-between items-center">
+                        <h3 className="font-semibold text-purple-900">Dataset Assistant</h3>
+                        <button
+                          onClick={() => setIsChatOpen(false)}
+                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <div className="p-4">
+                        <div ref={chatContainerRef} className="h-96 overflow-y-auto space-y-4 mb-4 scroll-smooth">
                           {chatMessages.map((msg, index) => (
                             <motion.div
                               key={index}
                               initial={{ opacity: 0, x: msg.isUser ? 20 : -20 }}
                               animate={{ opacity: 1, x: 0 }}
-                              className={`p-3 rounded-lg ${msg.isUser
-                                ? 'bg-purple-100 ml-auto'
-                                : 'bg-gray-100'
-                                } max-w-[80%]`}
+                              className={`p-3 rounded-lg ${
+                                msg.type == "user"
+                                  ? 'bg-purple-100 ml-12 text-purple-700'
+                                  : 'bg-gray-100 mr-12'
+                              } max-w-[80%] ${
+                                msg.type == "user" ? 'ml-auto' : 'mr-auto'
+                              }`}
                             >
-                              <ReactMarkdown>{msg.text}</ReactMarkdown>
+                              <ReactMarkdown className={msg.isUser ? 'text-purple-700' : ''}>{msg.text}</ReactMarkdown>
                             </motion.div>
                           ))}
+                          {isMessageSending && (
+                            <motion.div
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="bg-gray-100 mr-12 p-3 rounded-lg max-w-[80%] mr-auto"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                              </div>
+                            </motion.div>
+                          )}
                         </div>
 
                         <div className="flex gap-2">
@@ -563,14 +551,19 @@ export default function Result() {
                             type="text"
                             value={userInput}
                             onChange={(e) => setUserInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && userInput.trim() && !isMessageSending) {
+                                handleSendMessage();
+                              }
+                            }}
                             placeholder="Ask a question about the analysis..."
-                            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-50 disabled:text-gray-500"
                             disabled={isMessageSending}
                           />
                           <button
                             onClick={handleSendMessage}
                             disabled={!userInput.trim() || isMessageSending}
-                            className="rounded-lg bg-purple-400 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 disabled:opacity-50"
+                            className="rounded-lg bg-purple-400 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Send
                           </button>
@@ -578,7 +571,7 @@ export default function Result() {
                       </div>
                     </motion.div>
                   )}
-                </motion.div>
+                </div>
               </motion.div>
             </div>
           </div>

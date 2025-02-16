@@ -104,7 +104,7 @@ export default function Analyze() {
                 <PulseAnimation delay={0} />
               </div>
               <h1 className="text-4xl font-bold tracking-tight text-gray-900 pt-10 sm:text-5xl">
-                Data <span className="text-purple-400 pl-3">Analysis</span>
+                Data <span className="text-purple-400">Analysis</span>
               </h1>
               <p className="mt-4 text-lg leading-7 text-gray-600">
                 Upload your CSV or JSON files to begin analysis

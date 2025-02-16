@@ -16,7 +16,7 @@ export default function App({ Component, pageProps }) {
       <div className="h-fit w-full pt-12">
         <Component {...pageProps} />
       </div>
-      <footer className="absolute bottom-0 w-full py-6 text-center text-sm text-gray-500">
+      <footer className="w-full py-6 text-center text-sm text-gray-500">
         {new Date().getFullYear()} VisionZ+. All rights reserved.
       </footer>
     </div>
