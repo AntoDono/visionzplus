@@ -49,6 +49,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/wearable', wearableRoutes);
 
 // Start server
+console.log("Connecting to MongoDB")
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

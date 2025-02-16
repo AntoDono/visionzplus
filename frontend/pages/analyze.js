@@ -11,6 +11,7 @@ export default function Analyze() {
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [requirements, setRequirements] = useState('');
 
   const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
     // Handle rejected files
@@ -65,8 +66,9 @@ export default function Analyze() {
         files.map(file => readFileContent(file))
       );
       
-      // Store the data in sessionStorage
+      // Store the data and requirements in sessionStorage
       sessionStorage.setItem('data', JSON.stringify(fileContents));
+      sessionStorage.setItem('requirements', requirements);
       
       // Navigate to the result page
       router.push('/result');
@@ -149,45 +151,32 @@ export default function Analyze() {
             className="mt-8"
           >
             <h2 className="text-xl font-semibold text-white mb-4">Uploaded Files</h2>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {files.map((file, index) => (
-                <motion.div
-                  key={`${file.name}-${index}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg backdrop-blur-sm"
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg"
                 >
-                  <div className="flex items-center">
-                    <div className="text-purple-400 mr-3">
-                      {file.name.endsWith('.csv') ? '📊' : '📄'}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{file.name}</p>
-                      <p className="text-gray-400 text-sm">
-                        {(file.size / 1024).toFixed(2)} KB
-                      </p>
-                    </div>
-                  </div>
+                  <span className="text-gray-300">{file.name}</span>
                   <button
                     onClick={() => removeFile(file)}
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    className="text-red-400 hover:text-red-300 transition-colors"
                   >
-                    <svg
-                      className="w-5 h-5 text-gray-400 hover:text-red-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
+                    Remove
                   </button>
-                </motion.div>
+                </div>
               ))}
+            </div>
+
+            {/* Requirements Text Box */}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-white mb-4">Specific Requirements</h2>
+              <textarea
+                value={requirements}
+                onChange={(e) => setRequirements(e.target.value)}
+                placeholder="Enter any specific requirements or instructions for the analysis..."
+                className="w-full h-32 p-4 bg-white/5 border border-gray-600 rounded-lg text-gray-300 placeholder-gray-500 focus:border-purple-400 focus:outline-none resize-none"
+              />
             </div>
 
             {/* Analyze Button */}
