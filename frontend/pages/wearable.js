@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import GridIllustration from '../components/ui/grid-illustration';
+import PulseAnimation from '../components/ui/pulse-animation';
 
 export default function WearablePage() {
     const [email, setEmail] = useState('alexandre.venet@hotmail.com');
@@ -20,7 +23,7 @@ export default function WearablePage() {
     useEffect(() => {
         const checkUserConnection = async () => {
             try {
-                const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
+                const response = await fetch(`http://localhost:5000/api/wearable/historical-data/${encodeURIComponent(email)}`);
                 const data = await response.json();
                 if (data.success && data.data) {
                     setTerraUser({
@@ -42,7 +45,7 @@ export default function WearablePage() {
     // Polling function to check data status
     const pollForData = async (userId) => {
         try {
-            const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(userId)}`);
+            const response = await fetch(`http://localhost:5000/api/wearable/historical-data/${encodeURIComponent(userId)}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch data');
             }
@@ -70,7 +73,7 @@ export default function WearablePage() {
         setIsConnecting(true);
         setConnectionStatus(null);
         try {
-            const response = await fetch(`/api/wearable/auth/garmin?user_id=${encodeURIComponent(email)}`);
+            const response = await fetch(`http://localhost:5000/api/wearable/auth/garmin?user_id=${encodeURIComponent(email)}`);
             const data = await response.json();
             
             if (data.success && data.widget_url) {
@@ -80,7 +83,7 @@ export default function WearablePage() {
                 // Poll for connection status
                 const checkInterval = setInterval(async () => {
                     try {
-                        const statusResponse = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
+                        const statusResponse = await fetch(`http://localhost:5000/api/wearable/historical-data/${encodeURIComponent(email)}`);
                         const statusData = await statusResponse.json();
                         
                         if (statusData.success && statusData.data) {
@@ -110,7 +113,7 @@ export default function WearablePage() {
     const fetchHistoricalData = async () => {
         setConnectionStatus('Fetching MongoDB data...');
         try {
-            const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
+            const response = await fetch(`http://localhost:5000/api/wearable/historical-data/${encodeURIComponent(email)}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch MongoDB data');
             }
@@ -149,40 +152,94 @@ export default function WearablePage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8 text-gray-900">
-            <h1 className="text-3xl font-bold mb-8 text-gray-900">Wearable Data Dashboard</h1>
+        <>
+            <div className="fixed inset-0 -z-10">
+                <GridIllustration />
+            </div>
             
-            {/* Device Connection Section */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                {connectionStatus && (
-                    <div className={`mb-4 p-3 rounded ${connectionStatus.includes('Failed') ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                        {connectionStatus}
+            <div className="relative pt-12">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="relative py-8 lg:py-12">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.97, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ 
+                                duration: 0.8,
+                                ease: [0.16, 1, 0.3, 1]
+                            }}
+                            className="max-w-2xl"
+                        >
+                            <div className="absolute -left-4 top-8 h-12 w-12">
+                                <PulseAnimation delay={0} />
+                            </div>
+                            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                                Connect Your
+                                <br />
+                                <span className="text-purple-400">Wearable Device</span>
+                            </h1>
+                            <p className="mt-4 text-lg leading-7 text-gray-600">
+                                Connect your device to start tracking your health metrics.
+                            </p>
+                            <div className="mt-8">
+                                <div className="card p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <div className="mb-4">
+                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                                        />
+                                    </div>
+
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={connectDevice}
+                                        disabled={isConnecting}
+                                        className="w-full rounded-lg bg-purple-400 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 disabled:opacity-50"
+                                    >
+                                        {isConnecting ? 'Connecting...' : 'Connect Device'}
+                                    </motion.button>
+
+                                    {connectionStatus && (
+                                        <motion.p
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="mt-4 text-sm text-gray-600"
+                                        >
+                                            {connectionStatus}
+                                        </motion.p>
+                                    )}
+                                </div>
+
+                                {terraUser && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-6"
+                                    >
+                                        <div className="grid gap-4">
+                                            {Object.entries(healthData).map(([key, value]) => (
+                                                <motion.div
+                                                    key={key}
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    className="card p-4 bg-white rounded-xl shadow-sm border border-gray-200"
+                                                    onClick={() => setActiveTab(key)}
+                                                >
+                                                    <h3 className="text-lg font-semibold capitalize text-gray-900">{key.replace('_', ' ')}</h3>
+                                                    <p className="text-sm text-gray-600">{Array.isArray(value) ? `${value.length} records` : '0 records'}</p>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </div>
+                        </motion.div>
                     </div>
-                )}
-                {terraUser && (
-                    <div className="mb-4 p-3 rounded bg-green-100 text-green-700">
-                        Connected to {terraUser.provider} as {terraUser.reference_id}
-                    </div>
-                )}
-                <h2 className="text-xl font-semibold mb-4">Connect Your Device</h2>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Email Address
-                    </label>
-                    <input
-                        type="email"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
                 </div>
-                <button
-                    className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={connectDevice}
-                    disabled={isConnecting}
-                >
-                    {isConnecting ? 'Connecting...' : 'Connect Garmin Device'}
-                </button>
             </div>
 
             {/* Historical Data Section */}
@@ -233,6 +290,6 @@ export default function WearablePage() {
                     ))}
                 </div>
             </div>
-        </div>
+        </>
     );
 }

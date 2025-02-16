@@ -28,8 +28,8 @@ async function exportData() {
         // Create a dynamic model for each collection
         const Model = mongoose.model(collectionName, new mongoose.Schema({}, { strict: false }), collectionName);
         
-        // Fetch all documents from the collection
-        const documents = await Model.find({}).lean();
+        // Fetch documents from the collection with a limit of 200
+        const documents = await Model.find({}).limit(3).lean();
         data[collectionName] = documents;
         
         console.log(`Found ${documents.length} documents in ${collectionName}`);
