@@ -2,7 +2,7 @@
 
 VisionZ+, Your data scientist.
 
-![VisionZ+ Logo](visionz+.png "VisionZ+ Logo")
+![VisionZ+ Logo](./images/visionz+.png "VisionZ+ Logo")
 
 First of its kind data visualization and analysis platform powered by our groundbreaking Multi-Agent AI Architecture. Analyze **any** dataset with just a drag and drop.
 
@@ -14,11 +14,23 @@ Stanford TreeHacks 2025.
 <a href="http://linkedin.com/in/nickadesina" target="_blank">Nick Adesina</a> (UC Berkeley), 
 <a href="https://www.linkedin.com/in/a-zimina/" target="_blank">Anni Zimina</a> (Stanford University)
 
+<table border="0">
+ <tr>
+    <img src="./images/team1.jpg" width=500 alt="Team photo!">
+ </tr>
+ <tr>
+   <img src="./images/team2.jpg" width=500 alt="Team photo!">
+ </tr>
+</table>
+
+## What is VisionZ+
+VisionZ+ is a first-of-its-kind data visualization and analysis platform that lets users analyze any dataset through a simple drag-and-drop interface. With our dataset assistant, you can simply ask questions about your data and let the AI find patterns and insights for you. The platform is powered by a Multi-Agent AI Architecture that processes data through multiple specialized agents - from initial analysis and orchestration to planning, execution via mini-agent swarms, and validation. This makes sophisticated data analysis accessible to anyone, regardless of their technical background. Whether you're a medical researcher analyzing patient data, a military strategist evaluating operations, a financial advisor tracking markets, or a small business owner understanding operations, VisionZ+ eliminates the need for a dedicated data science team - just ask questions and get insights.
+
 ## Revolutionary Multi-Agent AI Architecture
 
 VisionZ+ employs a sophisticated Multi-Agent AI system that processes your requests through a highly orchestrated pipeline:
 
-![VisionZ+ Multi-Agent Architecture](architecture.png "Architecture Diagram")
+![VisionZ+ Multi-Agent Architecture](./images/architecture.png "Architecture Diagram")
 
 1. **Analysis Agent** 🔍
    - First point of contact for all user requests
@@ -56,6 +68,14 @@ This advanced pipeline delivers:
 - Scalable architecture for complex tasks
 - Robust error handling and quality control
 - Real-time adaptive processing
+
+## Inspiration
+
+We believe everyone deserves their own personal data scientist. In today's data-driven world, the ability to extract meaningful insights from data shouldn't be limited to those with technical expertise or resources to hire analysts. Whether you're a medical researcher analyzing patient outcomes, a military strategist evaluating field operations, or a financial advisor tracking market trends, understanding your data is crucial for making informed decisions.
+
+This vision drove us to create VisionZ+. In healthcare, it can help doctors identify patterns in patient vitals and treatment responses. Military personnel can use it to analyze sensor data from equipment and personnel, enhancing operational efficiency and safety. Financial institutions can leverage it to detect market patterns and assess risk factors. Even small business owners can gain valuable insights about their operations without needing a dedicated data science team.
+
+By combining cutting-edge AI with an intuitive interface, we're making sophisticated data analysis accessible to everyone, regardless of their technical background or industry.
 
 ## Setup Instructions
 
