@@ -122,14 +122,13 @@ export default function Result() {
       {
         "data_analysis": {
           "structure": "Description of data structure, given the data object, what fields to access in order to get the data.",
-          "summary": "A brief summary of the dataset and general trends and what it describes."
         },
         "visualization_recommendations": [
           {
             "type": "Name of visualization",
             "title": "Title of the Chart",
             "interpretation": "A sentence of why this graph and what is shown",
-            "data_requirements": ["What data transformations are needed. Identify the keys or how to get to that value (e.g. data[0][i]["key"])."],
+            "data_requirements": ["What data transformations are needed"],
           }
         ]
       }
@@ -344,7 +343,6 @@ export default function Result() {
                 className="text-center mb-8"
               >
                 <h1 className="text-4xl font-bold text-white mb-4 pt-32 p-8">Analysis Results</h1>
-                {requirements ? <p className="text-xl text-justify text-white p-8">{analysisResult['data_analysis']['summary']}</p> : ''}
                 <div id="renderCharts" className="w-full h-full flex flex-col justify-center items-center gap-y-4">
                   
                 </div>

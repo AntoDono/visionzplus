@@ -2,124 +2,102 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import GridIllustration from '../components/ui/grid-illustration';
+import FeatureItem from '../components/feature-item';
+import PulseAnimation from '../components/ui/pulse-animation';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-32">
-      <div className="container mx-auto px-4 py-16">
-
-        {/* Hero Section */}
-        <main className="flex flex-col items-center justify-center text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="relative"
-          >
-            <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 opacity-75 blur"></div>
-            <h1 className="relative text-5xl md:text-7xl font-bold mb-6 text-white">
-              VisionZ<span className="text-purple-400">+</span>
-            </h1>
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-xl md:text-2xl text-gray-300 max-w-2xl p-10"
-          >
-            Visualize, Create, and Predict Any Data with AI-Powered Insights
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-            className="flex gap-4"
-          >
-            <Link 
-              href="/analyze"
-              className="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-full text-xl font-semibold transition-all transform hover:scale-105 hover:shadow-lg inline-flex items-center gap-2"
-            >
-              Start Analyzing
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </motion.div>
-
-          {/* Features Grid */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.6 }}
-            className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {/* Data Visualization */}
-            <div className="p-6 bg-white/5 rounded-xl backdrop-blur-sm hover:bg-white/10 transition-all">
-              <div className="text-purple-400 mb-4 flex items-center justify-center h-16">
-                <svg className="w-10 h-10 transform translate-y-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 3v17a1 1 0 001 1h17v-2H5V3H3z"/>
-                  <path d="M15 10v8h2v-8h-2zM7 12v6h2v-6H7zm4-4v10h2V8h-2z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Smart Visualization</h3>
-              <p className="text-gray-400">Transform complex data into beautiful, interactive visualizations</p>
-            </div>
-
-            {/* AI Predictions */}
-            <div className="p-6 bg-white/5 rounded-xl backdrop-blur-sm hover:bg-white/10 transition-all">
-              <div className="text-purple-400 mb-4 flex items-center justify-center h-16">
-                <svg className="w-11 h-11 transform translate-y-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2a9 9 0 00-9 9v7.5c0 1.93 1.57 3.5 3.5 3.5h11c1.93 0 3.5-1.57 3.5-3.5V11a9 9 0 00-9-9zm5.5 16.5c0 .83-.67 1.5-1.5 1.5h-8c-.83 0-1.5-.67-1.5-1.5V11c0-3.86 3.14-7 7-7s7 3.14 7 7v7.5z"/>
-                  <circle cx="9" cy="10" r="1"/>
-                  <circle cx="15" cy="10" r="1"/>
-                  <path d="M12 16c1.66 0 3-1.34 3-3H9c0 1.66 1.34 3 3 3z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-white">AI Predictions</h3>
-              <p className="text-gray-400">Leverage advanced AI to forecast trends and patterns</p>
-            </div>
-
-            {/* Real-time Analytics */}
-            <div className="p-6 bg-white/5 rounded-xl backdrop-blur-sm hover:bg-white/10 transition-all">
-              <div className="text-purple-400 mb-4 flex items-center justify-center h-16">
-                <svg className="w-10 h-10 transform translate-y-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M13 2.06v3.88c3.39.49 6 3.39 6 6.91 0 .9-.18 1.75-.5 2.54l3.37 1.84c.5-1.35.77-2.8.77-4.32 0-5.52-3.83-10.13-8.89-11.37zm-2 0C6.04 3.3 2.21 7.91 2.21 13.43c0 1.52.27 2.97.77 4.32l3.37-1.84c-.32-.79-.5-1.64-.5-2.54 0-3.52 2.61-6.42 6-6.91V2.06z"/>
-                  <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Real-time Analytics</h3>
-              <p className="text-gray-400">Process and analyze data in real-time for instant insights</p>
-            </div>
-          </motion.div>
-
-          {/* Stats Section */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
-            className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
-          >
-            <div className="p-6">
-              <div className="text-4xl font-bold text-purple-400 mb-2">99%</div>
-              <div className="text-gray-400">Accuracy Rate</div>
-            </div>
-            <div className="p-6">
-              <div className="text-4xl font-bold text-purple-400 mb-2">50+</div>
-              <div className="text-gray-400">Chart Types</div>
-            </div>
-            <div className="p-6">
-              <div className="text-4xl font-bold text-purple-400 mb-2">10x</div>
-              <div className="text-gray-400">Faster Analysis</div>
-            </div>
-            <div className="p-6">
-              <div className="text-4xl font-bold text-purple-400 mb-2">24/7</div>
-              <div className="text-gray-400">Real-time Updates</div>
-            </div>
-          </motion.div>
-        </main>
+    <>
+      <div className="fixed inset-0 -z-10">
+        <GridIllustration />
       </div>
-    </div>
+      
+      <div className="relative">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="relative py-8 lg:py-12">
+            <div className="lg:grid lg:grid-cols-12 lg:gap-x-6">
+              {/* Left side: Text content */}
+              <div className="lg:col-span-6">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.97, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ 
+                    duration: 0.8,
+                    ease: [0.16, 1, 0.3, 1]
+                  }}
+                  className="relative"
+                >
+                  <div className="absolute -left-4 top-8 h-12 w-12">
+                    <PulseAnimation delay={0} />
+                  </div>
+                  <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl xl:text-6xl">
+                    Transform Your Health
+                    <br />
+                    Data Into
+                    <br />
+                    <span className="text-purple-400">Actionable Insights</span>
+                  </h1>
+                  <p className="mt-4 text-lg leading-7 text-gray-600">
+                    Connect your wearable devices and unlock powerful analytics to understand 
+                    your health patterns and make informed decisions about your well-being.
+                  </p>
+                  <div className="mt-6 flex gap-3">
+                    <Link
+                      href="/wearable"
+                      className="inline-flex items-center rounded-lg bg-purple-400 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2"
+                    >
+                      Connect Device
+                    </Link>
+                    <Link
+                      href="/analyze"
+                      className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      View Analytics
+                    </Link>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Right side: Feature items */}
+              <div className="mt-12 lg:col-span-6 lg:mt-0">
+                <div className="flex flex-col gap-3">
+                  <FeatureItem
+                    icon={
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    }
+                    title="Real-Time Sync"
+                    description="Seamlessly connect and sync data from your wearable devices for instant access to your health metrics."
+                    delay={0.2}
+                  />
+                  <FeatureItem
+                    icon={
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    }
+                    title="AI Analytics"
+                    description="Leverage AI-powered analytics to uncover patterns and trends in your health data."
+                    delay={0.4}
+                  />
+                  <FeatureItem
+                    icon={
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    }
+                    title="Secure & Private"
+                    description="Your health data is encrypted and protected with enterprise-grade security measures."
+                    delay={0.6}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
