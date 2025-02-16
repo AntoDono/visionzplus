@@ -14,14 +14,10 @@ Stanford TreeHacks 2025.
 <a href="https://www.linkedin.com/in/a-zimina/" target="_blank">Anni Zimina</a> (Stanford University)
 <a href="http://linkedin.com/in/nickadesina" target="_blank">Nick Adesina</a> (UC Berkeley), 
 
-<table border="0">
- <tr>
-    <img src="./images/team1.jpg" width=300 alt="Team photo!">
- </tr>
- <tr>
+<p float="left">
+   <img src="./images/team1.jpg" width=300 alt="Team photo!">
    <img src="./images/team2.jpg" width=300 alt="Team photo!">
- </tr>
-</table>
+</p>
 
 ## What is VisionZ+
 VisionZ+ is a first-of-its-kind data visualization and analysis platform that lets users analyze any dataset through a simple drag-and-drop interface. With our dataset assistant, you can simply ask questions about your data and let the AI find patterns and insights for you. The platform is powered by a Multi-Agent AI Architecture that processes data through multiple specialized agents - from initial analysis and orchestration to planning, execution via mini-agent swarms, and validation. This makes sophisticated data analysis accessible to anyone, regardless of their technical background. Whether you're a medical researcher analyzing patient data, a military strategist evaluating operations, a financial advisor tracking markets, or a small business owner understanding operations, VisionZ+ eliminates the need for a dedicated data science team - just ask questions and get insights.
