@@ -23,7 +23,7 @@ export default function WearablePage() {
     useEffect(() => {
         const checkUserConnection = async () => {
             try {
-                const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
+                const response = await fetch(`http://localhost:5000/api/wearable/historical-data/${encodeURIComponent(email)}`);
                 const data = await response.json();
                 if (data.success && data.data) {
                     setTerraUser({
@@ -45,7 +45,7 @@ export default function WearablePage() {
     // Polling function to check data status
     const pollForData = async (userId) => {
         try {
-            const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(userId)}`);
+            const response = await fetch(`http://localhost:5000/api/wearable/historical-data/${encodeURIComponent(userId)}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch data');
             }
@@ -73,7 +73,7 @@ export default function WearablePage() {
         setIsConnecting(true);
         setConnectionStatus(null);
         try {
-            const response = await fetch(`/api/wearable/auth/garmin?user_id=${encodeURIComponent(email)}`);
+            const response = await fetch(`http://localhost:5000/api/wearable/auth/garmin?user_id=${encodeURIComponent(email)}`);
             const data = await response.json();
             
             if (data.success && data.widget_url) {
@@ -83,7 +83,7 @@ export default function WearablePage() {
                 // Poll for connection status
                 const checkInterval = setInterval(async () => {
                     try {
-                        const statusResponse = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
+                        const statusResponse = await fetch(`http://localhost:5000/api/wearable/historical-data/${encodeURIComponent(email)}`);
                         const statusData = await statusResponse.json();
                         
                         if (statusData.success && statusData.data) {
@@ -113,7 +113,7 @@ export default function WearablePage() {
     const fetchHistoricalData = async () => {
         setConnectionStatus('Fetching MongoDB data...');
         try {
-            const response = await fetch(`/api/wearable/historical-data/${encodeURIComponent(email)}`);
+            const response = await fetch(`http://localhost:5000/api/wearable/historical-data/${encodeURIComponent(email)}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch MongoDB data');
             }
@@ -137,7 +137,7 @@ export default function WearablePage() {
                 <GridIllustration />
             </div>
             
-            <div className="relative">
+            <div className="relative pt-12">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="relative py-8 lg:py-12">
                         <motion.div
