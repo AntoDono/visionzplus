@@ -13,9 +13,12 @@ if (!process.env.OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY is not set in environment variables');
 }
 
+// Debug log for environment variables
+console.log('OpenAI API Key exists:', !!process.env.OPENAI_API_KEY);
+
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY || '' // Provide empty string as fallback
 });
 
 router.post('/generate', async (req, res) => {
