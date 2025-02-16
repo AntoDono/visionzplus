@@ -80,7 +80,6 @@ This advanced pipeline delivers:
       NODE_ENV = Node environment (development/production)     
    ```
    - Update other environment variables as needed
-
 4. Start the backend server:
    ```bash
    npm start
