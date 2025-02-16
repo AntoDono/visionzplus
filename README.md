@@ -10,8 +10,8 @@ Stanford TreeHacks 2025.
 
 ### Team:
 <a href="https://youweizhen.com" target="_blank">Youwei Zhen</a> (Brown University), 
-<a href="http://linkedin.com/in/taorui-huang/" target="_blank">Taorui Huang</a>,
-<a href="https://www.linkedin.com/in/a-zimina/" target="_blank">Anni Zimina</a> (Stanford University),
+<a href="http://linkedin.com/in/taorui-huang/" target="_blank">Taorui Huang</a> (Stanford),
+<a href="https://www.linkedin.com/in/a-zimina/" target="_blank">Anni Zimina</a> (Stanford),
 <a href="http://linkedin.com/in/nickadesina" target="_blank">Nick Adesina</a> (UC Berkeley)
 
 <p float="left">
