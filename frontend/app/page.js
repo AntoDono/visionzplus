@@ -8,7 +8,7 @@ import PulseAnimation from '../components/ui/pulse-animation';
 
 export default function Home() {
   return (
-    <>
+    <div className="overflow-x-hidden">
       <div className="fixed inset-0 -z-10">
         <GridIllustration />
       </div>
@@ -98,6 +98,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

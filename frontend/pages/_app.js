@@ -1,13 +1,24 @@
-'use client';
-
 import '../app/globals.css';
-import Navbar from '../components/Navbar';
+import { Inter } from 'next/font/google';
+import Header from '../components/header';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'VisionZ+',
+  description: 'Transform your health data into actionable insights',
+};
 
 export default function App({ Component, pageProps }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <Navbar />
-      <Component {...pageProps} />
+    <div className="h-full w-screen">
+      <Header />
+      <div className="h-fit w-full pt-12">
+        <Component {...pageProps} />
+      </div>
+      <footer className="w-full py-6 text-center text-sm text-gray-500">
+        {new Date().getFullYear()} VisionZ+. All rights reserved.
+      </footer>
     </div>
   );
 }

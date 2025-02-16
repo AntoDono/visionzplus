@@ -45,13 +45,13 @@ const NavLink = ({ href, children }) => {
 
 export default function Header() {
   return (
-    <header className="relative p-5">
-      <div className="mx-auto max-w-5xl">
+    <header className="fixed p-5 w-full z-20">
+      <div className="mx-auto w-[85vw]">
         <nav
           className="rounded-xl border border-gray-200 bg-white/95 px-7 py-2 backdrop-blur-sm"
           aria-label="Main navigation"
         >
-          <div className="flex h-10 items-center justify-between">
+          <div className="flex h-10 items-center justify-between pt-8 pb-8">
             {/* Logo */}
             <div className="flex items-center gap-4">
               <Link href="/">
